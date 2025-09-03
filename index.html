@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cable Robot Controller</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <h1>Cable Robot Controller</h1>
+            <div class="status-bar">
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot offline"></span>
+                    <span>Disconnected</span>
+                </div>
+                <button id="emergencyStop" class="emergency-btn">EMERGENCY STOP</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- 3D Viewport -->
+            <section class="viewport-section">
+                <div class="panel-header">
+                    <h2>3D Workspace</h2>
+                </div>
+                <div id="viewport" class="viewport"></div>
+                <div class="position-display">
+                    <div class="coord">X: <span id="posX">0.00</span> m</div>
+                    <div class="coord">Y: <span id="posY">0.00</span> m</div>
+                    <div class="coord">Z: <span id="posZ">0.00</span> m</div>
+                </div>
+            </section>
+
+            <!-- Movement Controls -->
+            <section class="controls-section">
+                <div class="panel-header">
+                    <h2>Movement Controls</h2>
+                </div>
+                <div class="movement-controls">
+                    <!-- Z-axis (Up/Down) -->
+                    <div class="axis-control">
+                        <label>Z-Axis (Up/Down)</label>
+                        <div class="control-buttons">
+                            <button class="move-btn" data-axis="z" data-direction="1">↑ UP</button>
+                            <button class="move-btn" data-axis="z" data-direction="-1">↓ DOWN</button>
+                        </div>
+                        <input type="range" class="axis-slider" id="zSlider" min="-5" max="5" value="0" step="0.1">
+                    </div>
+
+                    <!-- X-axis (Left/Right) -->
+                    <div class="axis-control">
+                        <label>X-Axis (Left/Right)</label>
+                        <div class="control-buttons">
+                            <button class="move-btn" data-axis="x" data-direction="-1">← LEFT</button>
+                            <button class="move-btn" data-axis="x" data-direction="1">→ RIGHT</button>
+                        </div>
+                        <input type="range" class="axis-slider" id="xSlider" min="-10" max="10" value="0" step="0.1">
+                    </div>
+
+                    <!-- Y-axis (Front/Back) -->
+                    <div class="axis-control">
+                        <label>Y-Axis (Front/Back)</label>
+                        <div class="control-buttons">
+                            <button class="move-btn" data-axis="y" data-direction="1">↗ FRONT</button>
+                            <button class="move-btn" data-axis="y" data-direction="-1">↙ BACK</button>
+                        </div>
+                        <input type="range" class="axis-slider" id="ySlider" min="-10" max="10" value="0" step="0.1">
+                    </div>
+
+                    <!-- Speed Control -->
+                    <div class="speed-control">
+                        <label>Movement Speed</label>
+                        <input type="range" id="speedSlider" min="0.1" max="2.0" value="1.0" step="0.1">
+                        <span id="speedValue">1.0</span> m/s
+                    </div>
+
+                    <!-- Manual Position Input -->
+                    <div class="manual-position">
+                        <label>Manual Position</label>
+                        <div class="position-inputs">
+                            <input type="number" id="manualX" placeholder="X" step="0.1">
+                            <input type="number" id="manualY" placeholder="Y" step="0.1">
+                            <input type="number" id="manualZ" placeholder="Z" step="0.1">
+                            <button id="goToPosition">GO TO</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Accessory Controls -->
+            <section class="accessory-section">
+                <div class="panel-header">
+                    <h2>Accessory Controls</h2>
+                </div>
+                <div class="accessory-grid">
+                    <div class="accessory-group">
+                        <h3>Lighting</h3>
+                        <div class="accessory-controls">
+                            <div class="accessory-item">
+                                <label class="switch">
+                                    <input type="checkbox" id="mainLight">
+                                    <span class="slider"></span>
+                                </label>
+                                <span>Main Light</span>
+                            </div>
+                            <div class="accessory-item">
+                                <label class="switch">
+                                    <input type="checkbox" id="spotLight">
+                                    <span class="slider"></span>
+                                </label>
+                                <span>Spot Light</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accessory-group">
+                        <h3>Sensors</h3>
+                        <div class="accessory-controls">
+                            <div class="accessory-item">
+                                <label class="switch">
+                                    <input type="checkbox" id="lidar">
+                                    <span class="slider"></span>
+                                </label>
+                                <span>LiDAR</span>
+                            </div>
+                            <div class="accessory-item">
+                                <label class="switch">
+                                    <input type="checkbox" id="ultrasonic">
+                                    <span class="slider"></span>
+                                </label>
+                                <span>Ultrasonic</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accessory-group">
+                        <h3>Tools</h3>
+                        <div class="accessory-controls">
+                            <div class="accessory-item">
+                                <label class="switch">
+                                    <input type="checkbox" id="gripper">
+                                    <span class="slider"></span>
+                                </label>
+                                <span>Gripper</span>
+                            </div>
+                            <div class="accessory-item">
+                                <button class="action-btn" id="calibrate">Calibrate</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Camera Monitor -->
+            <section class="camera-section">
+                <div class="panel-header">
+                    <h2>Camera Monitor</h2>
+                    <div class="camera-controls">
+                        <button id="fullscreenCamera">⛶</button>
+                        <button id="snapshot">📷</button>
+                        <button id="recordToggle">⏺️</button>
+                    </div>
+                </div>
+                <div class="camera-container">
+                    <video id="cameraFeed" autoplay muted>
+                        <div class="no-signal">No Camera Signal</div>
+                    </video>
+                    <div class="camera-overlay">
+                        <div class="crosshair"></div>
+                        <div class="camera-info">
+                            <span id="cameraResolution">1920x1080</span>
+                            <span id="cameraFPS">30 FPS</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="camera-controls-extended">
+                    <div class="control-group">
+                        <label>Zoom</label>
+                        <input type="range" id="zoomSlider" min="1" max="10" value="1" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label>Brightness</label>
+                        <input type="range" id="brightnessSlider" min="0" max="200" value="100" step="1">
+                    </div>
+                    <div class="control-group">
+                        <label>Contrast</label>
+                        <input type="range" id="contrastSlider" min="0" max="200" value="100" step="1">
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Status Panel -->
+        <aside class="status-panel">
+            <div class="panel-header">
+                <h2>System Status</h2>
+            </div>
+            <div class="status-items">
+                <div class="status-item">
+                    <span class="label">Robot Status:</span>
+                    <span class="value" id="robotStatus">Idle</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">Battery:</span>
+                    <span class="value" id="batteryLevel">85%</span>
+                    <div class="battery-bar">
+                        <div class="battery-fill" style="width: 85%"></div>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <span class="label">Cable Tension:</span>
+                    <span class="value" id="cableTension">Normal</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">Temperature:</span>
+                    <span class="value" id="temperature">25°C</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">Last Command:</span>
+                    <span class="value" id="lastCommand">-</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Fullscreen Camera Modal -->
+    <div id="fullscreenModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <video id="fullscreenVideo" autoplay muted></video>
+        </div>
+    </div>
+
+    <script src="js/three-setup.js"></script>
+    <script src="js/robot-controller.js"></script>
+    <script src="js/camera-controller.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
