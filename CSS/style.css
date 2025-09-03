@@ -46,6 +46,54 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.safety-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.safety-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.safety-btn.activate {
+    background: #28a745;
+    color: white;
+}
+
+.safety-btn.activate:hover {
+    background: #34ce57;
+}
+
+.safety-btn.deactivate {
+    background: #ffc107;
+    color: #000;
+}
+
+.safety-btn.deactivate:hover {
+    background: #ffcd39;
+}
+
+.emergency-btn {
+    background: #dc3545;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.emergency-btn:hover {
+    background: #e4606d;
+}
+
 .status-dot {
     width: 12px;
     height: 12px;
@@ -90,14 +138,7 @@ body {
     transform: scale(0.98);
 }
 
-/* Main Content Layout */
-.main-content {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-    padding: 2rem;
-    min-height: calc(100vh - 80px);
-}
+/* Main Content Layout - REMOVED: Conflicting with flex layout below */
 
 /* Panel Base Styles */
 .viewport-section,
@@ -521,11 +562,392 @@ body {
     margin-top: 2rem;
 }
 
-/* Status Panel */
-.status-panel {
+/* New Layout Styles for Integrated Interface */
+.main-content {
+    display: flex;
+    gap: 8px; /* Reduced from 10px for more space */
+    padding: 10px; /* Reduced from 15px for more space */
+    min-height: calc(100vh - 80px);
+}
+
+.left-panel {
+    flex: 3; /* Increased from 2 to give more space to viewport */
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Reduced from 20px */
+}
+
+.center-panel {
+    flex: 0.7; /* Reduced from 1 to make narrower */
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Reduced from 15px */
+}
+
+.right-panel {
+    flex: 0.7; /* Reduced from 1 to make narrower */
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Reduced from 20px */
+}
+
+/* Viewport Styles */
+.viewport-section {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 15px;
-    padding: 1.5rem;
+    padding: 0.8rem; /* Reduced from 1rem for more viewport space */
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
+}
+
+.viewport {
+    width: 950px;   /* Increased from 850px to use more available space */
+    height: 700px;  /* Increased from 640px for better proportion */
+    border: 2px solid #00d4ff;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px; /* Reduced from 15px */
+}
+
+.view-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.view-btn {
+    background: #0066cc;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10px;
+}
+
+.view-btn:hover {
+    background: #0088ff;
+}
+
+/* Vertical Controls */
+.controls-section-vertical {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 0.8rem; /* Reduced from 1rem */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.controls-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Reduced from 15px for more compact layout */
+}
+
+.control-group-vertical {
+    background: rgba(255,255,255,0.1);
+    padding: 10px; /* Reduced from 12px */
+    border-radius: 8px;
+}
+
+.control-group-vertical h3 {
+    margin: 0 0 6px 0; /* Reduced margin */
+    color: #00d4ff;
+    font-size: 13px; /* Slightly smaller */
+    text-align: center;
+}
+
+.button-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.controls-vertical button {
+    background: #0066cc;
+    color: white;
+    border: none;
+    padding: 5px 8px; /* Slightly reduced padding */
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 9px; /* Reduced font size */
+    min-width: 55px; /* Reduced from 70px */
+    flex: 1;
+}
+
+.controls-vertical button:hover:not(:disabled) {
+    background: #0088ff;
+}
+
+.controls-vertical button:disabled {
+    background: #555;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.controls-vertical input[type="range"] {
+    width: 100%;
+    margin: 4px 0;
+    height: 18px;
+}
+
+.controls-vertical input[type="range"]:disabled {
+    opacity: 0.5;
+}
+
+.controls-vertical .quick-btn {
+    background: #28a745 !important;
+    font-size: 9px !important;
+    min-width: 60px !important;
+}
+
+.controls-vertical .quick-btn:hover:not(:disabled) {
+    background: #34ce57 !important;
+}
+
+.controls-vertical .quick-btn:disabled {
+    background: #555 !important;
+}
+
+/* Camera Section */
+.camera-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 1rem; /* Reduced from 1.5rem */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.camera-container {
+    position: relative;
+    width: 100%;
+    height: 240px; /* Increased from 200px */
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 8px; /* Reduced margin */
+}
+
+.camera-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.no-signal {
+    text-align: center;
+    color: #666;
+}
+
+.no-signal span {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.no-signal p {
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+.no-signal small {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.camera-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.camera-controls button {
+    background: #0066cc;
+    color: white;
+    border: none;
+    padding: 5px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.camera-controls button:hover:not(:disabled) {
+    background: #0088ff;
+}
+
+.camera-controls button:disabled {
+    background: #555;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Status Section */
+.status-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 1rem; /* Reduced from 1.5rem */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.status-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.status-item .label {
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.status-item .value {
+    font-weight: 600;
+    color: #00d4ff;
+}
+
+/* Position Display */
+.position-display {
+    background: rgba(0,0,0,0.5);
+    padding: 8px;
+    border-radius: 4px;
+    margin: 8px 0; /* Reduced margin */
+    font-size: 12px;
+    max-width: 850px; /* Adjusted for larger viewport */
+}
+
+.position-display .coord {
+    display: inline-block;
+    margin-right: 15px;
+}
+
+/* Control Status */
+.control-status {
+    display: flex;
+    align-items: center;
+}
+
+.status-active {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.status-inactive {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+}
+
+.modal-content {
+    position: relative;
+    margin: 5% auto;
+    width: 80%;
+    height: 80%;
+    background: #1a1a1a;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: white;
+}
+
+.fullscreen-camera-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+}
+
+.fullscreen-camera-placeholder span {
+    font-size: 120px;
+    margin-bottom: 20px;
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    z-index: 1001;
+    animation: slideIn 0.3s ease;
+}
+
+.notification-success {
+    background: #28a745;
+}
+
+.notification-error {
+    background: #dc3545;
+}
+
+.notification-warning {
+    background: #ffc107;
+    color: #000;
+}
+
+.notification-info {
+    background: #17a2b8;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Status Dot Colors */
+.status-dot.simulation {
+    background: #ffc107;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
 }

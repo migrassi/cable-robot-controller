@@ -12,7 +12,7 @@ class RobotVisualization {
         
         // Cable robot configuration
         this.motorRadius = 3.0; // 3 meters radius
-        this.motorHeight = 5.0; // Motors at 5m height
+        this.motorHeight = 5.0; // Motors at 5m height (Y axis is UP)
         this.motorPositions = this.calculateMotorPositions();
         
         this.init();
@@ -20,13 +20,13 @@ class RobotVisualization {
     }
 
     calculateMotorPositions() {
-        // Three motors separated by 120 degrees
+        // Three motors separated by 120 degrees - Y is UP (vertical)
         const positions = [];
         for (let i = 0; i < 3; i++) {
             const angle = (i * 120) * Math.PI / 180; // Convert to radians
             const x = this.motorRadius * Math.cos(angle);
-            const y = this.motorRadius * Math.sin(angle);
-            const z = this.motorHeight;
+            const z = this.motorRadius * Math.sin(angle); // Z is horizontal depth
+            const y = this.motorHeight; // Y is vertical (UP)
             positions.push({ x, y, z });
         }
         return positions;
@@ -44,9 +44,9 @@ class RobotVisualization {
             0.1,
             1000
         );
-        // Position camera for good initial view
-        this.camera.position.set(10, 10, 8);
-        this.camera.lookAt(new THREE.Vector3(0, 0, 2.5));
+        // Position camera for good initial view - Y es vertical (arriba)
+        this.camera.position.set(8, 6, 8);
+        this.camera.lookAt(new THREE.Vector3(0, 2.5, 0)); // Mirar al centro del workspace
 
         // Renderer setup
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -100,62 +100,96 @@ class RobotVisualization {
     }
 
     createWorkspace() {
-        // Create circular workspace boundary at ground level
-        const workspaceRadius = this.motorRadius + 1; // Slightly larger than motor circle
-        const workspaceGeometry = new THREE.CylinderGeometry(workspaceRadius, workspaceRadius, 0.1, 32);
-        const workspaceMaterial = new THREE.MeshBasicMaterial({
-            color: 0x333333,
+        // PLANO DEL PISO - Horizontal en Y=0 (XZ plane)
+        const floorSize = 8; // 8x8 metros
+        const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
+        const floorMaterial = new THREE.MeshStandardMaterial({
+            color: 0x2a2a2a,
             transparent: true,
-            opacity: 0.3
+            opacity: 0.8
         });
-        this.workspace = new THREE.Mesh(workspaceGeometry, workspaceMaterial);
-        this.workspace.position.set(0, 0, 0);
-        this.scene.add(this.workspace);
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2; // Horizontal (XZ plane at Y=0)
+        floor.position.set(0, 0, 0);
+        floor.receiveShadow = true;
+        this.scene.add(floor);
 
-        // Add circular grid
-        const gridRadius = workspaceRadius;
-        const gridSegments = 16;
-        const gridGeometry = new THREE.RingGeometry(0.1, gridRadius, gridSegments, 8);
-        const gridMaterial = new THREE.MeshBasicMaterial({
+        // Grid en el piso para referencia - GridHelper está por defecto en XZ (Y=0), perfecto
+        const gridHelper = new THREE.GridHelper(floorSize, 16, 0x444444, 0x333333);
+        gridHelper.position.set(0, 0, 0); // En el piso Y=0
+        this.scene.add(gridHelper);
+
+        // PLANO DE LOS MOTORES - Horizontal a altura Y=motorHeight
+        const motorPlaneSize = this.motorRadius * 2.5;
+        const motorPlaneGeometry = new THREE.PlaneGeometry(motorPlaneSize, motorPlaneSize);
+        const motorPlaneMaterial = new THREE.MeshStandardMaterial({
             color: 0x444444,
-            side: THREE.DoubleSide,
-            wireframe: true,
             transparent: true,
-            opacity: 0.5
+            opacity: 0.4,
+            side: THREE.DoubleSide
         });
-        const grid = new THREE.Mesh(gridGeometry, gridMaterial);
-        grid.rotation.x = -Math.PI / 2;
-        grid.position.y = 0.05;
-        this.scene.add(grid);
+        const motorPlane = new THREE.Mesh(motorPlaneGeometry, motorPlaneMaterial);
+        motorPlane.rotation.x = -Math.PI / 2; // Horizontal (XZ plane at Y=motorHeight)
+        motorPlane.position.set(0, this.motorHeight, 0);
+        this.scene.add(motorPlane);
 
-        // Add vertical reference lines to show workspace height
-        for (let i = 0; i < 4; i++) {
-            const angle = (i * 90) * Math.PI / 180;
-            const x = gridRadius * 0.8 * Math.cos(angle);
-            const y = gridRadius * 0.8 * Math.sin(angle);
+        // Círculo que muestra el radio de los motores - en plano XZ
+        const motorCircleGeometry = new THREE.RingGeometry(this.motorRadius - 0.1, this.motorRadius + 0.1, 32);
+        const motorCircleMaterial = new THREE.MeshBasicMaterial({
+            color: 0x444444, // Color gris suave en lugar de verde brillante
+            transparent: true,
+            opacity: 0.3, // Más transparente
+            side: THREE.DoubleSide
+        });
+        const motorCircle = new THREE.Mesh(motorCircleGeometry, motorCircleMaterial);
+        motorCircle.rotation.x = -Math.PI / 2; // Horizontal
+        motorCircle.position.set(0, this.motorHeight + 0.01, 0);
+        this.scene.add(motorCircle);
+
+        // Líneas verticales (paralelas al eje Y) que conectan los dos planos
+        for (let i = 0; i < 3; i++) {
+            const angle = (i * 120) * Math.PI / 180;
+            const x = this.motorRadius * Math.cos(angle);
+            const z = this.motorRadius * Math.sin(angle);
             
             const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-                new THREE.Vector3(x, y, 0),
-                new THREE.Vector3(x, y, this.motorHeight)
+                new THREE.Vector3(x, 0, z),              // Desde el piso (Y=0)
+                new THREE.Vector3(x, this.motorHeight, z) // Hasta los motores (Y=motorHeight)
             ]);
             const lineMaterial = new THREE.LineBasicMaterial({ 
-                color: 0x666666,
+                color: 0x888888,
                 transparent: true,
-                opacity: 0.3
+                opacity: 0.5
             });
             const line = new THREE.Line(lineGeometry, lineMaterial);
             this.scene.add(line);
         }
+
+        // Área de trabajo cilíndrica (workspace del robot) - eje vertical Y
+        const workspaceRadius = this.motorRadius * 0.8; // Más pequeño que el círculo de motores
+        const workspaceHeight = this.motorHeight - 0.5;
+        const workspaceGeometry = new THREE.CylinderGeometry(
+            workspaceRadius, workspaceRadius, workspaceHeight, 32, 1, true
+        );
+        const workspaceMaterial = new THREE.MeshBasicMaterial({
+            color: 0x0066ff,
+            transparent: true,
+            opacity: 0.1,
+            side: THREE.DoubleSide
+        });
+        this.workspace = new THREE.Mesh(workspaceGeometry, workspaceMaterial);
+        this.workspace.position.set(0, workspaceHeight / 2, 0); // Centrado verticalmente en Y
+        this.scene.add(this.workspace);
     }
 
     createMotors() {
-        // Create three motors positioned in a circle
+        // Create three motors positioned in a circle - MUCHO MÁS PEQUEÑOS
         this.motorPositions.forEach((pos, index) => {
             // Motor base/mount
             const motorGroup = new THREE.Group();
             
-            // Motor housing
-            const motorGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.8, 16);
+            // Motor housing - MÁS PEQUEÑO
+            const motorGeometry = new THREE.CylinderGeometry(0.08, 0.1, 0.2, 12);
             const motorMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0x666666,
                 metalness: 0.8,
@@ -166,66 +200,66 @@ class RobotVisualization {
             motor.receiveShadow = true;
             motorGroup.add(motor);
 
-            // Motor pulley/winch
-            const pulleyGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.1, 16);
+            // Motor pulley/winch - MÁS PEQUEÑO
+            const pulleyGeometry = new THREE.CylinderGeometry(0.04, 0.04, 0.03, 12);
             const pulleyMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0x444444,
                 metalness: 0.9,
                 roughness: 0.1
             });
             const pulley = new THREE.Mesh(pulleyGeometry, pulleyMaterial);
-            pulley.position.set(0, -0.45, 0);
+            pulley.position.set(0, -0.12, 0);
             pulley.castShadow = true;
             motorGroup.add(pulley);
 
-            // Motor support structure
-            const supportGeometry = new THREE.CylinderGeometry(0.1, 0.15, 1.0, 8);
+            // Motor support structure - MÁS PEQUEÑO
+            const supportGeometry = new THREE.CylinderGeometry(0.03, 0.05, 0.3, 8);
             const supportMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0x888888,
                 metalness: 0.6,
                 roughness: 0.4
             });
             const support = new THREE.Mesh(supportGeometry, supportMaterial);
-            support.position.set(0, 0.9, 0);
+            support.position.set(0, 0.25, 0);
             support.castShadow = true;
             motorGroup.add(support);
 
-            // LED indicator
-            const ledGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+            // LED indicator - MÁS PEQUEÑO
+            const ledGeometry = new THREE.SphereGeometry(0.02, 8, 8);
             const ledMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0x00ff00,
                 emissive: 0x004400,
                 emissiveIntensity: 0.5
             });
             const led = new THREE.Mesh(ledGeometry, ledMaterial);
-            led.position.set(0, 0.3, 0.35);
+            led.position.set(0, 0.08, 0.1);
             motorGroup.add(led);
 
             // Position the motor group
             motorGroup.position.set(pos.x, pos.y, pos.z);
             
-            // Rotate motor to face center
-            const angle = Math.atan2(pos.y, pos.x);
-            motorGroup.rotation.z = angle + Math.PI/2;
+            // Rotate motor to face center - ajustado para Y-up
+            const angle = Math.atan2(pos.z, pos.x);
+            motorGroup.rotation.y = angle + Math.PI/2;
             
             this.scene.add(motorGroup);
             this.motors.push({ group: motorGroup, pulley: pulley, led: led, position: pos });
 
-            // Add motor label
+            // Add motor label - MÁS PEQUEÑO - ajustado para Y-up
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            canvas.width = 256;
-            canvas.height = 256;
-            context.font = 'Bold 60px Arial';
+            canvas.width = 128;
+            canvas.height = 128;
+            context.font = 'Bold 40px Arial';
             context.fillStyle = 'white';
             context.textAlign = 'center';
-            context.fillText(`M${index + 1}`, 128, 128);
+            context.fillText(`M${index + 1}`, 64, 64);
             
             const texture = new THREE.CanvasTexture(canvas);
             const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
             const sprite = new THREE.Sprite(spriteMaterial);
-            sprite.position.set(pos.x, pos.y, pos.z + 1);
-            sprite.scale.set(0.5, 0.5, 0.5);
+            sprite.position.set(pos.x, pos.y + 0.3, pos.z);
+            sprite.scale.set(0.3, 0.3, 0.3);
             this.scene.add(sprite);
         });
     }
@@ -291,8 +325,8 @@ class RobotVisualization {
             this.robot.add(led);
         }
 
-        // Set initial position (suspended in workspace)
-        this.robot.position.set(0, 0, 2.5);
+        // Set initial position (suspended in workspace) - Y es vertical
+        this.robot.position.set(0, 2.5, 0); // X, Y(height), Z
         this.scene.add(this.robot);
     }
 
@@ -300,13 +334,13 @@ class RobotVisualization {
         // Create three cables connecting robot to motors
         this.motorPositions.forEach((motorPos, index) => {
             const points = [
-                new THREE.Vector3(motorPos.x, motorPos.y, motorPos.z - 0.4), // From pulley
-                this.robot.position.clone().add(new THREE.Vector3(0, 0, 0.15)) // To robot attachment point
+                new THREE.Vector3(motorPos.x, motorPos.y - 0.12, motorPos.z), // From pulley (Y adjusted for smaller size)
+                this.robot.position.clone().add(new THREE.Vector3(0, 0.15, 0)) // To robot attachment point (Y offset)
             ];
             
             // Create thicker cable using TubeGeometry
             const curve = new THREE.CatmullRomCurve3(points);
-            const tubeGeometry = new THREE.TubeGeometry(curve, 20, 0.02, 8, false);
+            const tubeGeometry = new THREE.TubeGeometry(curve, 20, 0.01, 8, false); // Cables más delgados
             const cableMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0xffaa00,
                 metalness: 0.3,
@@ -323,9 +357,6 @@ class RobotVisualization {
         // Simplified mouse controls for camera
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };
-        let cameraRadius = 12;
-        let cameraAngleX = 0;
-        let cameraAngleY = 0;
 
         this.renderer.domElement.addEventListener('mousedown', (event) => {
             isDragging = true;
@@ -341,18 +372,18 @@ class RobotVisualization {
                 };
 
                 // Update camera angles
-                cameraAngleX -= deltaMove.x * 0.01;
-                cameraAngleY += deltaMove.y * 0.01;
+                this.cameraAngleX -= deltaMove.x * 0.01;
+                this.cameraAngleY += deltaMove.y * 0.01;
                 
                 // Limit vertical rotation
-                cameraAngleY = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, cameraAngleY));
+                this.cameraAngleY = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, this.cameraAngleY));
 
-                // Update camera position
-                this.camera.position.x = cameraRadius * Math.cos(cameraAngleY) * Math.cos(cameraAngleX);
-                this.camera.position.y = cameraRadius * Math.cos(cameraAngleY) * Math.sin(cameraAngleX);
-                this.camera.position.z = cameraRadius * Math.sin(cameraAngleY) + 2.5;
+                // Update camera position - Y es vertical
+                this.camera.position.x = this.cameraRadius * Math.cos(this.cameraAngleY) * Math.cos(this.cameraAngleX);
+                this.camera.position.z = this.cameraRadius * Math.cos(this.cameraAngleY) * Math.sin(this.cameraAngleX);
+                this.camera.position.y = this.cameraRadius * Math.sin(this.cameraAngleY) + 2.5; // Y es altura
                 
-                this.camera.lookAt(new THREE.Vector3(0, 0, 2.5));
+                this.camera.lookAt(new THREE.Vector3(0, 2.5, 0)); // Mirar al centro del workspace
                 
                 previousMousePosition = { x: event.clientX, y: event.clientY };
             }
@@ -367,26 +398,29 @@ class RobotVisualization {
             const zoomSpeed = 0.5;
             const direction = event.deltaY > 0 ? 1 : -1;
             
-            cameraRadius += direction * zoomSpeed;
-            cameraRadius = Math.max(5, Math.min(30, cameraRadius));
+            this.cameraRadius += direction * zoomSpeed;
+            this.cameraRadius = Math.max(5, Math.min(30, this.cameraRadius));
             
-            // Update camera position
-            this.camera.position.x = cameraRadius * Math.cos(cameraAngleY) * Math.cos(cameraAngleX);
-            this.camera.position.y = cameraRadius * Math.cos(cameraAngleY) * Math.sin(cameraAngleX);
-            this.camera.position.z = cameraRadius * Math.sin(cameraAngleY) + 2.5;
+            // Update camera position - Y es vertical
+            this.camera.position.x = this.cameraRadius * Math.cos(this.cameraAngleY) * Math.cos(this.cameraAngleX);
+            this.camera.position.z = this.cameraRadius * Math.cos(this.cameraAngleY) * Math.sin(this.cameraAngleX);
+            this.camera.position.y = this.cameraRadius * Math.sin(this.cameraAngleY) + 2.5; // Y es altura
             
             event.preventDefault();
         });
 
         // Store angles for use in animation
-        this.cameraAngleX = cameraAngleX;
-        this.cameraAngleY = cameraAngleY;
-        this.cameraRadius = cameraRadius;
+        this.cameraAngleX = 0;
+        this.cameraAngleY = 0;
+        this.cameraRadius = 12;
+        
+        // Initialize camera position
+        this.resetCameraView();
     }
 
     updateRobotPosition(x, y, z) {
         if (this.robot) {
-            this.robot.position.set(x, y, z);
+            this.robot.position.set(x, z, y); // Mapear: x->x, y->z, z->y (porque Y es vertical)
             this.robotLight.position.copy(this.robot.position);
             this.updateCables();
         }
@@ -396,13 +430,13 @@ class RobotVisualization {
         this.cables.forEach((cable, index) => {
             const motorPos = this.motorPositions[index];
             const points = [
-                new THREE.Vector3(motorPos.x, motorPos.y, motorPos.z - 0.4), // From pulley
-                this.robot.position.clone().add(new THREE.Vector3(0, 0, 0.15)) // To robot attachment point
+                new THREE.Vector3(motorPos.x, motorPos.y - 0.12, motorPos.z), // From pulley (Y adjusted for smaller size)
+                this.robot.position.clone().add(new THREE.Vector3(0, 0.15, 0)) // To robot attachment point (Y offset)
             ];
             
             // Update cable geometry
             const curve = new THREE.CatmullRomCurve3(points);
-            const newGeometry = new THREE.TubeGeometry(curve, 20, 0.02, 8, false);
+            const newGeometry = new THREE.TubeGeometry(curve, 20, 0.01, 8, false); // Cables más delgados
             
             // Replace the old geometry
             cable.geometry.dispose();
@@ -419,9 +453,9 @@ class RobotVisualization {
     animate() {
         requestAnimationFrame(() => this.animate());
         
-        // Subtle rotation of robot for visual feedback
+        // Subtle rotation of robot for visual feedback - Y es vertical
         if (this.robot) {
-            this.robot.rotation.z += 0.002;
+            this.robot.rotation.y += 0.002;
         }
 
         // Animate motor pulleys
@@ -448,7 +482,56 @@ class RobotVisualization {
     }
 
     getRobotPosition() {
-        return this.robot ? this.robot.position.clone() : new THREE.Vector3(0, 0, 0);
+        if (this.robot) {
+            // Mapear de vuelta: x->x, y->z, z->y (porque internamente Y es vertical)
+            return { 
+                x: this.robot.position.x, 
+                y: this.robot.position.z, 
+                z: this.robot.position.y 
+            };
+        }
+        return { x: 0, y: 0, z: 0 };
+    }
+
+    // Camera view methods
+    resetCameraView() {
+        this.camera.position.set(8, 6, 8);
+        this.camera.lookAt(new THREE.Vector3(0, 2.5, 0));
+        
+        // Reset stored camera angles
+        this.cameraAngleX = Math.atan2(this.camera.position.z, this.camera.position.x);
+        this.cameraAngleY = Math.asin(this.camera.position.y / this.cameraRadius);
+        this.cameraRadius = 12;
+    }
+
+    setTopView() {
+        this.camera.position.set(0, 12, 0);
+        this.camera.lookAt(new THREE.Vector3(0, 2.5, 0));
+        
+        // Update stored camera angles for top view
+        this.cameraAngleX = 0;
+        this.cameraAngleY = Math.PI / 2 - 0.1; // Almost straight down
+        this.cameraRadius = 12;
+    }
+
+    setSideView() {
+        this.camera.position.set(12, 2.5, 0);
+        this.camera.lookAt(new THREE.Vector3(0, 2.5, 0));
+        
+        // Update stored camera angles for side view
+        this.cameraAngleX = 0;
+        this.cameraAngleY = 0; // Horizontal view
+        this.cameraRadius = 12;
+    }
+
+    setFrontView() {
+        this.camera.position.set(0, 2.5, 12);
+        this.camera.lookAt(new THREE.Vector3(0, 2.5, 0));
+        
+        // Update stored camera angles for front view
+        this.cameraAngleX = Math.PI / 2;
+        this.cameraAngleY = 0; // Horizontal view
+        this.cameraRadius = 12;
     }
 }
 

@@ -15,252 +15,252 @@
             <h1>Cable Robot Controller</h1>
             <div class="status-bar">
                 <div class="connection-status" id="connectionStatus">
-                    <span class="status-dot offline"></span>
-                    <span>Disconnected</span>
+                    <span class="status-dot simulation"></span>
+                    <span>SIMULATION MODE</span>
                 </div>
-                <button id="emergencyStop" class="emergency-btn">EMERGENCY STOP</button>
+                <div class="safety-controls">
+                    <button id="systemActivate" class="safety-btn activate">ACTIVATE SYSTEM</button>
+                    <button id="emergencyStop" class="emergency-btn">EMERGENCY STOP</button>
+                </div>
             </div>
         </header>
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- 3D Viewport -->
-            <section class="viewport-section">
-                <div class="panel-header">
-                    <h2>3D Workspace</h2>
-                </div>
-                <div id="viewport" class="viewport"></div>
-                <div class="position-display">
-                    <div class="coord">X: <span id="posX">0.00</span> m</div>
-                    <div class="coord">Y: <span id="posY">0.00</span> m</div>
-                    <div class="coord">Z: <span id="posZ">0.00</span> m</div>
-                </div>
-            </section>
-
-            <!-- Movement Controls -->
-            <section class="controls-section">
-                <div class="panel-header">
-                    <h2>Movement Controls</h2>
-                </div>
-                <div class="movement-controls">
-                    <!-- Z-axis (Up/Down) -->
-                    <div class="axis-control">
-                        <label>Z-Axis (Up/Down)</label>
-                        <div class="control-buttons">
-                            <button class="move-btn" data-axis="z" data-direction="1">↑ UP</button>
-                            <button class="move-btn" data-axis="z" data-direction="-1">↓ DOWN</button>
-                        </div>
-                        <input type="range" class="axis-slider" id="zSlider" min="0.5" max="4.5" value="2.5" step="0.1">
-                    </div>
-
-                    <!-- X-axis (Left/Right) -->
-                    <div class="axis-control">
-                        <label>X-Axis (Left/Right)</label>
-                        <div class="control-buttons">
-                            <button class="move-btn" data-axis="x" data-direction="-1">← LEFT</button>
-                            <button class="move-btn" data-axis="x" data-direction="1">→ RIGHT</button>
-                        </div>
-                        <input type="range" class="axis-slider" id="xSlider" min="-2.5" max="2.5" value="0" step="0.1">
-                    </div>
-
-                    <!-- Y-axis (Front/Back) -->
-                    <div class="axis-control">
-                        <label>Y-Axis (Front/Back)</label>
-                        <div class="control-buttons">
-                            <button class="move-btn" data-axis="y" data-direction="1">↗ FRONT</button>
-                            <button class="move-btn" data-axis="y" data-direction="-1">↙ BACK</button>
-                        </div>
-                        <input type="range" class="axis-slider" id="ySlider" min="-2.5" max="2.5" value="0" step="0.1">
-                    </div>
-
-                    <!-- Speed Control -->
-                    <div class="speed-control">
-                        <label>Movement Speed</label>
-                        <input type="range" id="speedSlider" min="0.1" max="2.0" value="1.0" step="0.1">
-                        <span id="speedValue">1.0</span> m/s
-                    </div>
-
-                    <!-- Manual Position Input -->
-                    <div class="manual-position">
-                        <label>Manual Position</label>
-                        <div class="position-inputs">
-                            <input type="number" id="manualX" placeholder="X" step="0.1">
-                            <input type="number" id="manualY" placeholder="Y" step="0.1">
-                            <input type="number" id="manualZ" placeholder="Z" step="0.1">
-                            <button id="goToPosition">GO TO</button>
+            <!-- Left Panel: 3D Viewport -->
+            <div class="left-panel">
+                <!-- 3D Viewport -->
+                <section class="viewport-section">
+                    <div class="panel-header">
+                        <h2>3D Workspace</h2>
+                        <div class="view-controls">
+                            <button id="resetView" class="view-btn">Reset View</button>
+                            <button id="topView" class="view-btn">Top View</button>
+                            <button id="sideView" class="view-btn">Side View</button>
+                            <button id="frontView" class="view-btn">Front View</button>
                         </div>
                     </div>
-                </div>
-            </section>
+                    <div id="viewport" class="viewport"></div>
+                    <div class="position-display">
+                        <div class="coord">X: <span id="posX">0.00</span> m</div>
+                        <div class="coord">Y: <span id="posY">0.00</span> m</div>
+                        <div class="coord">Z: <span id="posZ">2.50</span> m (Height)</div>
+                    </div>
+                </section>
+            </div>
 
-            <!-- Accessory Controls -->
-            <section class="accessory-section">
-                <div class="panel-header">
-                    <h2>Accessory Controls</h2>
-                </div>
-                <div class="accessory-grid">
-                    <div class="accessory-group">
-                        <h3>Lighting</h3>
-                        <div class="accessory-controls">
-                            <div class="accessory-item">
-                                <label class="switch">
-                                    <input type="checkbox" id="mainLight">
-                                    <span class="slider"></span>
-                                </label>
-                                <span>Main Light</span>
+            <!-- Center Panel: Movement Controls -->
+            <div class="center-panel">
+                <!-- Movement Controls -->
+                <section class="controls-section-vertical">
+                    <div class="panel-header">
+                        <h2>Movement Controls</h2>
+                        <div class="control-status">
+                            <span id="systemStatus" class="status-inactive">SYSTEM INACTIVE</span>
+                        </div>
+                    </div>
+                    <div class="controls-vertical">
+                        <div class="control-group-vertical">
+                            <h3>X Axis</h3>
+                            <div class="button-row">
+                                <button class="move-btn" data-axis="x" data-direction="-1" disabled>← LEFT</button>
+                                <button class="move-btn" data-axis="x" data-direction="1" disabled>RIGHT →</button>
                             </div>
-                            <div class="accessory-item">
-                                <label class="switch">
-                                    <input type="checkbox" id="spotLight">
-                                    <span class="slider"></span>
-                                </label>
-                                <span>Spot Light</span>
+                            <input type="range" id="xSlider" min="-2.5" max="2.5" value="0" step="0.1" disabled>
+                        </div>
+                        
+                        <div class="control-group-vertical">
+                            <h3>Y Axis</h3>
+                            <div class="button-row">
+                                <button class="move-btn" data-axis="y" data-direction="1" disabled>↑ FRONT</button>
+                                <button class="move-btn" data-axis="y" data-direction="-1" disabled>↓ BACK</button>
+                            </div>
+                            <input type="range" id="ySlider" min="-2.5" max="2.5" value="0" step="0.1" disabled>
+                        </div>
+                        
+                        <div class="control-group-vertical">
+                            <h3>Z Axis (Height)</h3>
+                            <div class="button-row">
+                                <button class="move-btn" data-axis="z" data-direction="1" disabled>↑ UP</button>
+                                <button class="move-btn" data-axis="z" data-direction="-1" disabled>↓ DOWN</button>
+                            </div>
+                            <input type="range" id="zSlider" min="0.5" max="4.5" value="2.5" step="0.1" disabled>
+                        </div>
+                        
+                        <div class="control-group-vertical">
+                            <h3>Quick Positions</h3>
+                            <div class="button-row">
+                                <button class="quick-btn" onclick="goToPosition(0, 0, 2.5)" disabled>Center</button>
+                                <button class="quick-btn" onclick="goToPosition(1, 1, 3)" disabled>High</button>
+                            </div>
+                            <div class="button-row">
+                                <button class="quick-btn" onclick="goToPosition(-1, -1, 1)" disabled>Low</button>
+                                <button class="quick-btn" onclick="goToPosition(0, 0, 4)" disabled>Top</button>
                             </div>
                         </div>
                     </div>
+                </section>
+            </div>
 
-                    <div class="accessory-group">
-                        <h3>Sensors</h3>
-                        <div class="accessory-controls">
-                            <div class="accessory-item">
-                                <label class="switch">
-                                    <input type="checkbox" id="lidar">
-                                    <span class="slider"></span>
-                                </label>
-                                <span>LiDAR</span>
+            <!-- Right Panel: Camera and Status -->
+            <div class="right-panel">
+                <!-- Camera Monitor -->
+                <section class="camera-section">
+                    <div class="panel-header">
+                        <h2>Camera Monitor</h2>
+                        <div class="camera-controls">
+                            <button id="fullscreenCamera" disabled>⛶</button>
+                            <button id="snapshot" disabled>📷</button>
+                            <button id="recordToggle" disabled>⏺️</button>
+                        </div>
+                    </div>
+                    <div class="camera-container">
+                        <div class="camera-placeholder">
+                            <div class="no-signal">
+                                <span>📹</span>
+                                <p>Camera Simulation</p>
+                                <small>Activate system to enable camera</small>
                             </div>
-                            <div class="accessory-item">
-                                <label class="switch">
-                                    <input type="checkbox" id="ultrasonic">
-                                    <span class="slider"></span>
-                                </label>
-                                <span>Ultrasonic</span>
+                        </div>
+                        <div class="camera-overlay">
+                            <div class="crosshair"></div>
+                            <div class="camera-info">
+                                <span id="cameraResolution">1920x1080</span>
+                                <span id="cameraFPS">30 FPS</span>
                             </div>
                         </div>
                     </div>
+                </section>
 
-                    <div class="accessory-group">
-                        <h3>Tools</h3>
-                        <div class="accessory-controls">
-                            <div class="accessory-item">
-                                <label class="switch">
-                                    <input type="checkbox" id="gripper">
-                                    <span class="slider"></span>
-                                </label>
-                                <span>Gripper</span>
-                            </div>
-                            <div class="accessory-item">
-                                <button class="action-btn" id="calibrate">Calibrate</button>
-                            </div>
+                <!-- System Status -->
+                <section class="status-section">
+                    <div class="panel-header">
+                        <h2>System Status</h2>
+                    </div>
+                    <div class="status-items">
+                        <div class="status-item">
+                            <span class="label">Robot Status:</span>
+                            <span class="value" id="robotStatus">Inactive</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">System Power:</span>
+                            <span class="value" id="systemPower">OFF</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Safety Status:</span>
+                            <span class="value" id="safetyStatus">SAFE</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Cable Tension:</span>
+                            <span class="value" id="cableTension">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Position:</span>
+                            <span class="value" id="positionStatus">Center</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Last Command:</span>
+                            <span class="value" id="lastCommand">System Standby</span>
                         </div>
                     </div>
-                </div>
-            </section>
-
-            <!-- Camera Monitor -->
-            <section class="camera-section">
-                <div class="panel-header">
-                    <h2>Camera Monitor</h2>
-                    <div class="camera-controls">
-                        <button id="fullscreenCamera">⛶</button>
-                        <button id="snapshot">📷</button>
-                        <button id="recordToggle">⏺️</button>
-                    </div>
-                </div>
-                <div class="camera-container">
-                    <video id="cameraFeed" autoplay muted>
-                        <div class="no-signal">No Camera Signal</div>
-                    </video>
-                    <div class="camera-overlay">
-                        <div class="crosshair"></div>
-                        <div class="camera-info">
-                            <span id="cameraResolution">1920x1080</span>
-                            <span id="cameraFPS">30 FPS</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="camera-controls-extended">
-                    <div class="control-group">
-                        <label>Zoom</label>
-                        <input type="range" id="zoomSlider" min="1" max="10" value="1" step="0.1">
-                    </div>
-                    <div class="control-group">
-                        <label>Brightness</label>
-                        <input type="range" id="brightnessSlider" min="0" max="200" value="100" step="1">
-                    </div>
-                    <div class="control-group">
-                        <label>Contrast</label>
-                        <input type="range" id="contrastSlider" min="0" max="200" value="100" step="1">
-                    </div>
-                </div>
-            </section>
+                </section>
+            </div>
         </main>
 
-        <!-- Status Panel -->
-        <aside class="status-panel">
-            <div class="panel-header">
-                <h2>System Status</h2>
-            </div>
-            <div class="status-items">
-                <div class="status-item">
-                    <span class="label">Robot Status:</span>
-                    <span class="value" id="robotStatus">Idle</span>
-                </div>
-                <div class="status-item">
-                    <span class="label">Battery:</span>
-                    <span class="value" id="batteryLevel">85%</span>
-                    <div class="battery-bar">
-                        <div class="battery-fill" style="width: 85%"></div>
-                    </div>
-                </div>
-                <div class="status-item">
-                    <span class="label">Cable Tension:</span>
-                    <span class="value" id="cableTension">Normal</span>
-                </div>
-                <div class="status-item">
-                    <span class="label">Temperature:</span>
-                    <span class="value" id="temperature">25°C</span>
-                </div>
-                <div class="status-item">
-                    <span class="label">Last Command:</span>
-                    <span class="value" id="lastCommand">-</span>
+        <!-- Fullscreen Camera Modal -->
+        <div id="fullscreenModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="fullscreen-camera-placeholder">
+                    <span>📹</span>
+                    <p>Camera Simulation</p>
                 </div>
             </div>
-        </aside>
-    </div>
-
-    <!-- Fullscreen Camera Modal -->
-    <div id="fullscreenModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <video id="fullscreenVideo" autoplay muted></video>
         </div>
-    </div>
 
     <script src="js/three-setup.js"></script>
     <script>
-        // Simple initialization - only 3D visualization for now
+        // Cable Robot Controller - Simulation Mode
         let robotVisualization;
+        let systemActive = false;
+        let emergencyStop = false;
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Initializing Cable Robot Visualization...');
+            console.log('Initializing Cable Robot Controller (Simulation Mode)...');
             
             // Initialize 3D visualization
             robotVisualization = new RobotVisualization('viewport');
             
-            // Simple manual controls
-            setupSimpleControls();
+            // Setup controls and safety systems
+            setupSafetyControls();
+            setupMovementControls();
+            setupViewControls();
+            setupCameraSimulation();
             
-            console.log('Visualization initialized successfully');
+            // Start status updates
+            updateSystemStatus();
+            setInterval(updateSystemStatus, 1000);
+            
+            console.log('Controller initialized successfully');
         });
 
-        function setupSimpleControls() {
+        function setupSafetyControls() {
+            // System Activation
+            document.getElementById('systemActivate').addEventListener('click', () => {
+                if (emergencyStop) {
+                    showNotification('Clear emergency stop first!', 'warning');
+                    return;
+                }
+                
+                systemActive = !systemActive;
+                const btn = document.getElementById('systemActivate');
+                
+                if (systemActive) {
+                    btn.textContent = 'DEACTIVATE SYSTEM';
+                    btn.className = 'safety-btn deactivate';
+                    enableControls();
+                    showNotification('System Activated', 'success');
+                    updateLastCommand('System Activated');
+                } else {
+                    btn.textContent = 'ACTIVATE SYSTEM';
+                    btn.className = 'safety-btn activate';
+                    disableControls();
+                    showNotification('System Deactivated', 'info');
+                    updateLastCommand('System Deactivated');
+                }
+            });
+
+            // Emergency Stop
+            document.getElementById('emergencyStop').addEventListener('click', () => {
+                emergencyStop = true;
+                systemActive = false;
+                
+                // Reset activation button
+                const activateBtn = document.getElementById('systemActivate');
+                activateBtn.textContent = 'ACTIVATE SYSTEM';
+                activateBtn.className = 'safety-btn activate';
+                
+                disableControls();
+                showNotification('EMERGENCY STOP ACTIVATED!', 'error');
+                updateLastCommand('EMERGENCY STOP');
+                
+                // Auto-clear after 5 seconds in simulation
+                setTimeout(() => {
+                    emergencyStop = false;
+                    showNotification('Emergency stop cleared (simulation)', 'info');
+                }, 5000);
+            });
+        }
+
+        function setupMovementControls() {
             // Movement buttons
             document.querySelectorAll('.move-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
+                    if (!systemActive || emergencyStop) return;
+                    
                     const axis = e.target.dataset.axis;
                     const direction = parseFloat(e.target.dataset.direction);
-                    const step = 0.2; // 20cm steps
+                    const step = 0.3;
                     
                     if (robotVisualization) {
                         const currentPos = robotVisualization.getRobotPosition();
@@ -279,53 +279,133 @@
                         
                         robotVisualization.setRobotPosition(newX, newY, newZ);
                         updatePositionDisplay(newX, newY, newZ);
+                        updateSliders(newX, newY, newZ);
+                        updateLastCommand(`Move ${axis.toUpperCase()}: ${direction > 0 ? '+' : ''}${(direction * step).toFixed(1)}m`);
                     }
                 });
             });
 
             // Sliders
-            document.getElementById('xSlider')?.addEventListener('input', (e) => {
+            ['x', 'y', 'z'].forEach(axis => {
+                const slider = document.getElementById(axis + 'Slider');
+                if (slider) {
+                    slider.addEventListener('input', (e) => {
+                        if (!systemActive || emergencyStop) return;
+                        
+                        if (robotVisualization) {
+                            const currentPos = robotVisualization.getRobotPosition();
+                            const newValue = parseFloat(e.target.value);
+                            
+                            let newX = currentPos.x;
+                            let newY = currentPos.y;
+                            let newZ = currentPos.z;
+                            
+                            if (axis === 'x') newX = newValue;
+                            if (axis === 'y') newY = newValue;
+                            if (axis === 'z') newZ = newValue;
+                            
+                            robotVisualization.setRobotPosition(newX, newY, newZ);
+                            updatePositionDisplay(newX, newY, newZ);
+                            updateLastCommand(`Set ${axis.toUpperCase()}: ${newValue.toFixed(2)}m`);
+                        }
+                    });
+                }
+            });
+        }
+
+        function setupViewControls() {
+            // View control buttons
+            document.getElementById('resetView')?.addEventListener('click', () => {
                 if (robotVisualization) {
-                    const currentPos = robotVisualization.getRobotPosition();
-                    const newX = parseFloat(e.target.value);
-                    robotVisualization.setRobotPosition(newX, currentPos.y, currentPos.z);
-                    updatePositionDisplay(newX, currentPos.y, currentPos.z);
+                    robotVisualization.resetCameraView();
+                    showNotification('Camera view reset', 'info');
                 }
             });
             
-            document.getElementById('ySlider')?.addEventListener('input', (e) => {
+            document.getElementById('topView')?.addEventListener('click', () => {
                 if (robotVisualization) {
-                    const currentPos = robotVisualization.getRobotPosition();
-                    const newY = parseFloat(e.target.value);
-                    robotVisualization.setRobotPosition(currentPos.x, newY, currentPos.z);
-                    updatePositionDisplay(currentPos.x, newY, currentPos.z);
+                    robotVisualization.setTopView();
+                    showNotification('Top view activated', 'info');
                 }
             });
             
-            document.getElementById('zSlider')?.addEventListener('input', (e) => {
+            document.getElementById('sideView')?.addEventListener('click', () => {
                 if (robotVisualization) {
-                    const currentPos = robotVisualization.getRobotPosition();
-                    const newZ = parseFloat(e.target.value);
-                    robotVisualization.setRobotPosition(currentPos.x, currentPos.y, newZ);
-                    updatePositionDisplay(currentPos.x, currentPos.y, newZ);
+                    robotVisualization.setSideView();
+                    showNotification('Side view activated', 'info');
+                }
+            });
+            
+            document.getElementById('frontView')?.addEventListener('click', () => {
+                if (robotVisualization) {
+                    robotVisualization.setFrontView();
+                    showNotification('Front view activated', 'info');
+                }
+            });
+        }
+
+        function setupCameraSimulation() {
+            // Camera controls - all simulated
+            document.getElementById('fullscreenCamera')?.addEventListener('click', () => {
+                if (systemActive) {
+                    document.getElementById('fullscreenModal').style.display = 'block';
+                } else {
+                    showNotification('Activate system first', 'warning');
+                }
+            });
+            
+            document.getElementById('snapshot')?.addEventListener('click', () => {
+                if (systemActive) {
+                    showNotification('Snapshot saved (simulated)', 'success');
+                } else {
+                    showNotification('Activate system first', 'warning');
+                }
+            });
+            
+            document.getElementById('recordToggle')?.addEventListener('click', () => {
+                if (systemActive) {
+                    showNotification('Recording toggled (simulated)', 'info');
+                } else {
+                    showNotification('Activate system first', 'warning');
                 }
             });
 
-            // Manual position input
-            document.getElementById('goToPosition')?.addEventListener('click', () => {
-                const x = parseFloat(document.getElementById('manualX')?.value || 0);
-                const y = parseFloat(document.getElementById('manualY')?.value || 0);
-                const z = parseFloat(document.getElementById('manualZ')?.value || 2.5);
-                
-                if (robotVisualization) {
-                    robotVisualization.setRobotPosition(x, y, z);
-                    updatePositionDisplay(x, y, z);
-                    
-                    // Update sliders
-                    document.getElementById('xSlider').value = x;
-                    document.getElementById('ySlider').value = y;
-                    document.getElementById('zSlider').value = z;
-                }
+            // Close modal
+            document.querySelector('.close')?.addEventListener('click', () => {
+                document.getElementById('fullscreenModal').style.display = 'none';
+            });
+        }
+
+        function goToPosition(x, y, z) {
+            if (!systemActive || emergencyStop) {
+                showNotification('System not active', 'warning');
+                return;
+            }
+            
+            if (robotVisualization) {
+                robotVisualization.setRobotPosition(x, y, z);
+                updatePositionDisplay(x, y, z);
+                updateSliders(x, y, z);
+                updateLastCommand(`Go to position: (${x}, ${y}, ${z})`);
+                showNotification(`Moving to position (${x}, ${y}, ${z})`, 'info');
+            }
+        }
+
+        function enableControls() {
+            document.querySelectorAll('.move-btn, .quick-btn, input[type="range"]').forEach(el => {
+                el.disabled = false;
+            });
+            document.querySelectorAll('#fullscreenCamera, #snapshot, #recordToggle').forEach(el => {
+                el.disabled = false;
+            });
+        }
+
+        function disableControls() {
+            document.querySelectorAll('.move-btn, .quick-btn, input[type="range"]').forEach(el => {
+                el.disabled = true;
+            });
+            document.querySelectorAll('#fullscreenCamera, #snapshot, #recordToggle').forEach(el => {
+                el.disabled = true;
             });
         }
 
@@ -333,6 +413,46 @@
             document.getElementById('posX').textContent = x.toFixed(2);
             document.getElementById('posY').textContent = y.toFixed(2);
             document.getElementById('posZ').textContent = z.toFixed(2);
+        }
+
+        function updateSliders(x, y, z) {
+            document.getElementById('xSlider').value = x;
+            document.getElementById('ySlider').value = y;
+            document.getElementById('zSlider').value = z;
+        }
+
+        function updateSystemStatus() {
+            // Update status indicators
+            document.getElementById('systemStatus').textContent = systemActive ? 'SYSTEM ACTIVE' : 'SYSTEM INACTIVE';
+            document.getElementById('systemStatus').className = systemActive ? 'status-active' : 'status-inactive';
+            
+            document.getElementById('robotStatus').textContent = emergencyStop ? 'EMERGENCY STOP' : (systemActive ? 'Ready' : 'Inactive');
+            document.getElementById('systemPower').textContent = systemActive ? 'ON' : 'OFF';
+            document.getElementById('safetyStatus').textContent = emergencyStop ? 'EMERGENCY' : 'SAFE';
+            document.getElementById('cableTension').textContent = systemActive ? 'Normal' : '-';
+            
+            // Update position status
+            if (robotVisualization) {
+                const pos = robotVisualization.getRobotPosition();
+                const isCenter = Math.abs(pos.x) < 0.1 && Math.abs(pos.y) < 0.1;
+                document.getElementById('positionStatus').textContent = isCenter ? 'Center' : `(${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)})`;
+            }
+        }
+
+        function updateLastCommand(command) {
+            document.getElementById('lastCommand').textContent = command;
+        }
+
+        function showNotification(message, type = 'info') {
+            // Simple notification system
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
     </script>
 </body>
