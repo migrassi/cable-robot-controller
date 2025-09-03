@@ -50,7 +50,7 @@
                             <button class="move-btn" data-axis="z" data-direction="1">↑ UP</button>
                             <button class="move-btn" data-axis="z" data-direction="-1">↓ DOWN</button>
                         </div>
-                        <input type="range" class="axis-slider" id="zSlider" min="-5" max="5" value="0" step="0.1">
+                        <input type="range" class="axis-slider" id="zSlider" min="0.5" max="4.5" value="2.5" step="0.1">
                     </div>
 
                     <!-- X-axis (Left/Right) -->
@@ -60,7 +60,7 @@
                             <button class="move-btn" data-axis="x" data-direction="-1">← LEFT</button>
                             <button class="move-btn" data-axis="x" data-direction="1">→ RIGHT</button>
                         </div>
-                        <input type="range" class="axis-slider" id="xSlider" min="-10" max="10" value="0" step="0.1">
+                        <input type="range" class="axis-slider" id="xSlider" min="-2.5" max="2.5" value="0" step="0.1">
                     </div>
 
                     <!-- Y-axis (Front/Back) -->
@@ -70,7 +70,7 @@
                             <button class="move-btn" data-axis="y" data-direction="1">↗ FRONT</button>
                             <button class="move-btn" data-axis="y" data-direction="-1">↙ BACK</button>
                         </div>
-                        <input type="range" class="axis-slider" id="ySlider" min="-10" max="10" value="0" step="0.1">
+                        <input type="range" class="axis-slider" id="ySlider" min="-2.5" max="2.5" value="0" step="0.1">
                     </div>
 
                     <!-- Speed Control -->
@@ -238,8 +238,102 @@
     </div>
 
     <script src="js/three-setup.js"></script>
-    <script src="js/robot-controller.js"></script>
-    <script src="js/camera-controller.js"></script>
-    <script src="js/app.js"></script>
+    <script>
+        // Simple initialization - only 3D visualization for now
+        let robotVisualization;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing Cable Robot Visualization...');
+            
+            // Initialize 3D visualization
+            robotVisualization = new RobotVisualization('viewport');
+            
+            // Simple manual controls
+            setupSimpleControls();
+            
+            console.log('Visualization initialized successfully');
+        });
+
+        function setupSimpleControls() {
+            // Movement buttons
+            document.querySelectorAll('.move-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const axis = e.target.dataset.axis;
+                    const direction = parseFloat(e.target.dataset.direction);
+                    const step = 0.2; // 20cm steps
+                    
+                    if (robotVisualization) {
+                        const currentPos = robotVisualization.getRobotPosition();
+                        let newX = currentPos.x;
+                        let newY = currentPos.y; 
+                        let newZ = currentPos.z;
+                        
+                        if (axis === 'x') newX += direction * step;
+                        if (axis === 'y') newY += direction * step;
+                        if (axis === 'z') newZ += direction * step;
+                        
+                        // Apply workspace limits
+                        newX = Math.max(-2.5, Math.min(2.5, newX));
+                        newY = Math.max(-2.5, Math.min(2.5, newY));
+                        newZ = Math.max(0.5, Math.min(4.5, newZ));
+                        
+                        robotVisualization.setRobotPosition(newX, newY, newZ);
+                        updatePositionDisplay(newX, newY, newZ);
+                    }
+                });
+            });
+
+            // Sliders
+            document.getElementById('xSlider')?.addEventListener('input', (e) => {
+                if (robotVisualization) {
+                    const currentPos = robotVisualization.getRobotPosition();
+                    const newX = parseFloat(e.target.value);
+                    robotVisualization.setRobotPosition(newX, currentPos.y, currentPos.z);
+                    updatePositionDisplay(newX, currentPos.y, currentPos.z);
+                }
+            });
+            
+            document.getElementById('ySlider')?.addEventListener('input', (e) => {
+                if (robotVisualization) {
+                    const currentPos = robotVisualization.getRobotPosition();
+                    const newY = parseFloat(e.target.value);
+                    robotVisualization.setRobotPosition(currentPos.x, newY, currentPos.z);
+                    updatePositionDisplay(currentPos.x, newY, currentPos.z);
+                }
+            });
+            
+            document.getElementById('zSlider')?.addEventListener('input', (e) => {
+                if (robotVisualization) {
+                    const currentPos = robotVisualization.getRobotPosition();
+                    const newZ = parseFloat(e.target.value);
+                    robotVisualization.setRobotPosition(currentPos.x, currentPos.y, newZ);
+                    updatePositionDisplay(currentPos.x, currentPos.y, newZ);
+                }
+            });
+
+            // Manual position input
+            document.getElementById('goToPosition')?.addEventListener('click', () => {
+                const x = parseFloat(document.getElementById('manualX')?.value || 0);
+                const y = parseFloat(document.getElementById('manualY')?.value || 0);
+                const z = parseFloat(document.getElementById('manualZ')?.value || 2.5);
+                
+                if (robotVisualization) {
+                    robotVisualization.setRobotPosition(x, y, z);
+                    updatePositionDisplay(x, y, z);
+                    
+                    // Update sliders
+                    document.getElementById('xSlider').value = x;
+                    document.getElementById('ySlider').value = y;
+                    document.getElementById('zSlider').value = z;
+                }
+            });
+        }
+
+        function updatePositionDisplay(x, y, z) {
+            document.getElementById('posX').textContent = x.toFixed(2);
+            document.getElementById('posY').textContent = y.toFixed(2);
+            document.getElementById('posZ').textContent = z.toFixed(2);
+        }
+    </script>
 </body>
 </html>

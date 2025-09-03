@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cable Robot 3D Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        
+        #viewport {
+            width: 800px;
+            height: 600px;
+            border: 2px solid #00d4ff;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            min-width: 200px;
+        }
+        
+        .control-group h3 {
+            margin-top: 0;
+            color: #00d4ff;
+        }
+        
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #0088ff;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .position-display {
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <h1>Cable Robot 3D Visualization Test</h1>
+    
+    <div id="viewport"></div>
+    
+    <div class="position-display">
+        <div>X: <span id="posX">0.00</span> m</div>
+        <div>Y: <span id="posY">0.00</span> m</div>
+        <div>Z: <span id="posZ">2.50</span> m</div>
+    </div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <h3>X Axis (Left/Right)</h3>
+            <button data-axis="x" data-direction="-1">← LEFT</button>
+            <button data-axis="x" data-direction="1">RIGHT →</button>
+            <input type="range" id="xSlider" min="-2.5" max="2.5" value="0" step="0.1">
+        </div>
+        
+        <div class="control-group">
+            <h3>Y Axis (Front/Back)</h3>
+            <button data-axis="y" data-direction="1">↑ FRONT</button>
+            <button data-axis="y" data-direction="-1">↓ BACK</button>
+            <input type="range" id="ySlider" min="-2.5" max="2.5" value="0" step="0.1">
+        </div>
+        
+        <div class="control-group">
+            <h3>Z Axis (Up/Down)</h3>
+            <button data-axis="z" data-direction="1">↑ UP</button>
+            <button data-axis="z" data-direction="-1">↓ DOWN</button>
+            <input type="range" id="zSlider" min="0.5" max="4.5" value="2.5" step="0.1">
+        </div>
+        
+        <div class="control-group">
+            <h3>Quick Positions</h3>
+            <button onclick="goToPosition(0, 0, 2.5)">Center</button>
+            <button onclick="goToPosition(1, 1, 3)">Corner High</button>
+            <button onclick="goToPosition(-1, -1, 1)">Corner Low</button>
+            <button onclick="goToPosition(0, 0, 4)">Max Height</button>
+        </div>
+    </div>
+
+    <script src="js/three-setup.js"></script>
+    <script>
+        let robotVisualization;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing test visualization...');
+            
+            // Initialize 3D visualization
+            robotVisualization = new RobotVisualization('viewport');
+            
+            // Setup controls
+            setupControls();
+            
+            console.log('Test visualization ready!');
+        });
+
+        function setupControls() {
+            // Movement buttons
+            document.querySelectorAll('button[data-axis]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const axis = e.target.dataset.axis;
+                    const direction = parseFloat(e.target.dataset.direction);
+                    const step = 0.3;
+                    
+                    if (robotVisualization) {
+                        const currentPos = robotVisualization.getRobotPosition();
+                        let newX = currentPos.x;
+                        let newY = currentPos.y; 
+                        let newZ = currentPos.z;
+                        
+                        if (axis === 'x') newX += direction * step;
+                        if (axis === 'y') newY += direction * step;
+                        if (axis === 'z') newZ += direction * step;
+                        
+                        // Apply limits
+                        newX = Math.max(-2.5, Math.min(2.5, newX));
+                        newY = Math.max(-2.5, Math.min(2.5, newY));
+                        newZ = Math.max(0.5, Math.min(4.5, newZ));
+                        
+                        robotVisualization.setRobotPosition(newX, newY, newZ);
+                        updateDisplay(newX, newY, newZ);
+                        updateSliders(newX, newY, newZ);
+                    }
+                });
+            });
+
+            // Sliders
+            document.getElementById('xSlider').addEventListener('input', (e) => {
+                if (robotVisualization) {
+                    const currentPos = robotVisualization.getRobotPosition();
+                    const newX = parseFloat(e.target.value);
+                    robotVisualization.setRobotPosition(newX, currentPos.y, currentPos.z);
+                    updateDisplay(newX, currentPos.y, currentPos.z);
+                }
+            });
+            
+            document.getElementById('ySlider').addEventListener('input', (e) => {
+                if (robotVisualization) {
+                    const currentPos = robotVisualization.getRobotPosition();
+                    const newY = parseFloat(e.target.value);
+                    robotVisualization.setRobotPosition(currentPos.x, newY, currentPos.z);
+                    updateDisplay(currentPos.x, newY, currentPos.z);
+                }
+            });
+            
+            document.getElementById('zSlider').addEventListener('input', (e) => {
+                if (robotVisualization) {
+                    const currentPos = robotVisualization.getRobotPosition();
+                    const newZ = parseFloat(e.target.value);
+                    robotVisualization.setRobotPosition(currentPos.x, currentPos.y, newZ);
+                    updateDisplay(currentPos.x, currentPos.y, newZ);
+                }
+            });
+        }
+
+        function goToPosition(x, y, z) {
+            if (robotVisualization) {
+                robotVisualization.setRobotPosition(x, y, z);
+                updateDisplay(x, y, z);
+                updateSliders(x, y, z);
+            }
+        }
+
+        function updateDisplay(x, y, z) {
+            document.getElementById('posX').textContent = x.toFixed(2);
+            document.getElementById('posY').textContent = y.toFixed(2);
+            document.getElementById('posZ').textContent = z.toFixed(2);
+        }
+
+        function updateSliders(x, y, z) {
+            document.getElementById('xSlider').value = x;
+            document.getElementById('ySlider').value = y;
+            document.getElementById('zSlider').value = z;
+        }
+    </script>
+</body>
+</html>
