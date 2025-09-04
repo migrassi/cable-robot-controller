@@ -1,5 +1,7 @@
 El presente software fue desarrollado completamente en la Universidad Nacional de Tres de Febrero en el marco del proyecto de Investigación "Desarrollo de un robot de 3+ GDL, suspendido por cables, para aplicaciones artísticas", código SIGEVA 80120240200030TF, Disciplina OCDE Humanidades y artes, dirigido por el Dr. Miguel Grassi.
 
+Está disponible como Open SOurce bajo licencia Creative Commons CC BY-NC-SA en> https://github.com/migrassi/cable-robot-controller
+
 # Cable Robot Controller - Sistema de Control Avanzado
 
 Un sistema de control completo y robusto para robots suspendidos por cables, con visualización 3D en tiempo real, comunicación hardware bidireccional y capacidades tanto de simulación como de control físico real.
@@ -387,8 +389,7 @@ git push origin nueva-caracteristica
 
 ## Licencia
 
-Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
-
+Este proyecto está licenciado como Creative Commons CC BY-NC-SA.
 ---
 
 **Desarrollado con dedicación para la comunidad de Artes Electrónicas**
