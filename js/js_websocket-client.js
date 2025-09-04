@@ -180,18 +180,9 @@ class WebSocketClient {
     }
 
     updateConnectionStatus() {
-        const statusDot = document.querySelector('.status-dot');
-        const statusText = document.querySelector('.connection-status span');
-        
-        if (statusDot && statusText) {
-            if (this.isConnected) {
-                statusDot.className = 'status-dot online';
-                statusText.textContent = 'Connected';
-            } else {
-                statusDot.className = 'status-dot offline';
-                statusText.textContent = this.reconnectAttempts > 0 ? 'Reconnecting...' : 'Disconnected';
-            }
-        }
+        // This function is disabled - UI is handled by the main application
+        // to prevent conflicts with the new button-based interface
+        return;
     }
 
     // Public API methods

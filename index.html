@@ -16,7 +16,7 @@
             <div class="status-bar">
                 <div class="connection-status" id="connectionStatus">
                     <span class="status-dot simulation"></span>
-                    <span>SIMULATION MODE</span>
+                    <button id="modeToggle" class="mode-toggle-btn">SIMULATION MODE</button>
                 </div>
                 <div class="safety-controls">
                     <button id="systemActivate" class="safety-btn activate">ACTIVATE SYSTEM</button>
@@ -40,11 +40,27 @@
                             <button id="frontView" class="view-btn">Front View</button>
                         </div>
                     </div>
-                    <div id="viewport" class="viewport"></div>
-                    <div class="position-display">
-                        <div class="coord">X: <span id="posX">0.00</span> m</div>
-                        <div class="coord">Y: <span id="posY">0.00</span> m</div>
-                        <div class="coord">Z: <span id="posZ">2.50</span> m (Height)</div>
+                    <div id="viewport" class="viewport">
+                        <!-- Coordinate overlay on viewport -->
+                        <div class="viewport-overlay">
+                            <div class="coord-display">
+                                <div class="coord-item">
+                                    <span class="coord-label">X:</span>
+                                    <span class="coord-value" id="overlayPosX">0.00</span>
+                                    <span class="coord-unit">m</span>
+                                </div>
+                                <div class="coord-item">
+                                    <span class="coord-label">Y:</span>
+                                    <span class="coord-value" id="overlayPosY">0.00</span>
+                                    <span class="coord-unit">m</span>
+                                </div>
+                                <div class="coord-item">
+                                    <span class="coord-label">Z:</span>
+                                    <span class="coord-value" id="overlayPosZ">2.50</span>
+                                    <span class="coord-unit">m</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -109,17 +125,18 @@
                     <div class="panel-header">
                         <h2>Camera Monitor</h2>
                         <div class="camera-controls">
-                            <button id="fullscreenCamera" disabled>⛶</button>
-                            <button id="snapshot" disabled>📷</button>
-                            <button id="recordToggle" disabled>⏺️</button>
+                            <button id="fullscreenCamera" disabled title="Fullscreen View">⛶</button>
+                            <button id="snapshot" disabled title="Take Snapshot">📷</button>
+                            <button id="recordToggle" disabled title="Start/Stop Recording">⏺️</button>
+                            <button id="stopCamera" disabled title="Stop Camera">⏹️</button>
                         </div>
                     </div>
                     <div class="camera-container">
                         <div class="camera-placeholder">
                             <div class="no-signal">
                                 <span>📹</span>
-                                <p>Camera Simulation</p>
-                                <small>Activate system to enable camera</small>
+                                <p>Camera Ready</p>
+                                <small>Activate system to enable webcam</small>
                             </div>
                         </div>
                         <div class="camera-overlay">
@@ -173,29 +190,36 @@
                 <span class="close">&times;</span>
                 <div class="fullscreen-camera-placeholder">
                     <span>📹</span>
-                    <p>Camera Simulation</p>
+                    <p>Camera Monitor</p>
                 </div>
             </div>
         </div>
 
     <script src="js/three-setup.js"></script>
+    <script src="js/js_websocket-client.js"></script>
     <script>
-        // Cable Robot Controller - Simulation Mode
+        // Cable Robot Controller - Hybrid Mode (Simulation + Hardware)
         let robotVisualization;
         let systemActive = false;
         let emergencyStop = false;
+        let isHardwareConnected = false;
+        let hardwareModeEnabled = false; // User preference for hardware connection
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Initializing Cable Robot Controller (Simulation Mode)...');
+            console.log('Initializing Cable Robot Controller (Hybrid Mode)...');
             
             // Initialize 3D visualization
             robotVisualization = new RobotVisualization('viewport');
+            
+            // Initialize position displays with default values
+            updatePositionDisplay(0, 0, 2.5);
             
             // Setup controls and safety systems
             setupSafetyControls();
             setupMovementControls();
             setupViewControls();
-            setupCameraSimulation();
+            setupCameraSystem();
+            setupWebSocketIntegration();
             
             // Start status updates
             updateSystemStatus();
@@ -221,12 +245,29 @@
                     enableControls();
                     showNotification('System Activated', 'success');
                     updateLastCommand('System Activated');
+                    
+                    // Send activation command to hardware if connected
+                    if (isHardwareConnected) {
+                        sendToHardware('activate')
+                            .catch((error) => {
+                                console.error('Hardware activation failed:', error);
+                                showNotification('Hardware activation failed', 'warning');
+                            });
+                    }
                 } else {
                     btn.textContent = 'ACTIVATE SYSTEM';
                     btn.className = 'safety-btn activate';
                     disableControls();
                     showNotification('System Deactivated', 'info');
                     updateLastCommand('System Deactivated');
+                    
+                    // Send deactivation command to hardware if connected
+                    if (isHardwareConnected) {
+                        sendToHardware('deactivate')
+                            .catch((error) => {
+                                console.error('Hardware deactivation failed:', error);
+                            });
+                    }
                 }
             });
 
@@ -244,11 +285,24 @@
                 showNotification('EMERGENCY STOP ACTIVATED!', 'error');
                 updateLastCommand('EMERGENCY STOP');
                 
-                // Auto-clear after 5 seconds in simulation
-                setTimeout(() => {
-                    emergencyStop = false;
-                    showNotification('Emergency stop cleared (simulation)', 'info');
-                }, 5000);
+                // Send emergency stop to hardware immediately if connected
+                if (isHardwareConnected) {
+                    sendToHardware('emergency_stop')
+                        .then(() => {
+                            console.log('Emergency stop sent to hardware');
+                        })
+                        .catch((error) => {
+                            console.error('Emergency stop command failed:', error);
+                        });
+                }
+                
+                // Auto-clear after 5 seconds in simulation mode only
+                if (!isHardwareConnected) {
+                    setTimeout(() => {
+                        emergencyStop = false;
+                        showNotification('Emergency stop cleared (simulation)', 'info');
+                    }, 5000);
+                }
             });
         }
 
@@ -281,6 +335,15 @@
                         updatePositionDisplay(newX, newY, newZ);
                         updateSliders(newX, newY, newZ);
                         updateLastCommand(`Move ${axis.toUpperCase()}: ${direction > 0 ? '+' : ''}${(direction * step).toFixed(1)}m`);
+                        
+                        // Send command to hardware if connected
+                        if (isHardwareConnected) {
+                            sendToHardware('move', { x: newX, y: newY, z: newZ })
+                                .catch((error) => {
+                                    console.error('Hardware move command failed:', error);
+                                    showNotification('Hardware command failed', 'warning');
+                                });
+                        }
                     }
                 });
             });
@@ -307,6 +370,14 @@
                             robotVisualization.setRobotPosition(newX, newY, newZ);
                             updatePositionDisplay(newX, newY, newZ);
                             updateLastCommand(`Set ${axis.toUpperCase()}: ${newValue.toFixed(2)}m`);
+                            
+                            // Send command to hardware if connected
+                            if (isHardwareConnected) {
+                                sendToHardware('move', { x: newX, y: newY, z: newZ })
+                                    .catch((error) => {
+                                        console.error('Hardware move command failed:', error);
+                                    });
+                            }
                         }
                     });
                 }
@@ -344,36 +415,251 @@
             });
         }
 
-        function setupCameraSimulation() {
-            // Camera controls - all simulated
-            document.getElementById('fullscreenCamera')?.addEventListener('click', () => {
-                if (systemActive) {
-                    document.getElementById('fullscreenModal').style.display = 'block';
+        function setupCameraSystem() {
+            let cameraStream = null;
+            let isRecording = false;
+            let mediaRecorder = null;
+            let recordedChunks = [];
+
+            // Initialize camera access
+            async function initializeCamera() {
+                try {
+                    const constraints = {
+                        video: {
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
+                            frameRate: { ideal: 30 }
+                        },
+                        audio: false
+                    };
+
+                    cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    
+                    // Replace placeholder with video element
+                    const cameraContainer = document.querySelector('.camera-container');
+                    const videoElement = document.createElement('video');
+                    videoElement.id = 'cameraVideo';
+                    videoElement.autoplay = true;
+                    videoElement.muted = true;
+                    videoElement.style.width = '100%';
+                    videoElement.style.height = '100%';
+                    videoElement.style.objectFit = 'cover';
+                    videoElement.style.borderRadius = '8px';
+                    
+                    // Replace placeholder
+                    const placeholder = cameraContainer.querySelector('.camera-placeholder');
+                    if (placeholder) {
+                        cameraContainer.removeChild(placeholder);
+                    }
+                    cameraContainer.appendChild(videoElement);
+                    
+                    videoElement.srcObject = cameraStream;
+                    
+                    // Update camera info with actual stream info
+                    const videoTrack = cameraStream.getVideoTracks()[0];
+                    const settings = videoTrack.getSettings();
+                    document.getElementById('cameraResolution').textContent = `${settings.width}x${settings.height}`;
+                    document.getElementById('cameraFPS').textContent = `${settings.frameRate || 30} FPS`;
+                    
+                    // Enable camera controls
+                    document.getElementById('fullscreenCamera').disabled = false;
+                    document.getElementById('snapshot').disabled = false;
+                    document.getElementById('recordToggle').disabled = false;
+                    document.getElementById('stopCamera').disabled = false;
+                    
+                    showNotification('Camera initialized successfully', 'success');
+                    
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    showNotification('Camera access denied or not available', 'error');
+                    
+                    // Update placeholder to show error
+                    const placeholder = document.querySelector('.camera-placeholder .no-signal p');
+                    if (placeholder) {
+                        placeholder.textContent = 'Camera Access Denied';
+                        placeholder.nextElementSibling.textContent = 'Check browser permissions';
+                    }
+                }
+            }
+
+            // Stop camera stream
+            function stopCamera() {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(track => track.stop());
+                    cameraStream = null;
+                    
+                    // Replace video with placeholder
+                    const cameraContainer = document.querySelector('.camera-container');
+                    const videoElement = document.getElementById('cameraVideo');
+                    if (videoElement) {
+                        cameraContainer.removeChild(videoElement);
+                    }
+                    
+                    // Restore placeholder
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'camera-placeholder';
+                    placeholder.innerHTML = `
+                        <div class="no-signal">
+                            <span>📹</span>
+                            <p>Camera Ready</p>
+                            <small>Activate system to enable webcam</small>
+                        </div>
+                    `;
+                    cameraContainer.appendChild(placeholder);
+                    
+                    // Disable camera controls
+                    document.getElementById('fullscreenCamera').disabled = true;
+                    document.getElementById('snapshot').disabled = true;
+                    document.getElementById('recordToggle').disabled = true;
+                    document.getElementById('stopCamera').disabled = true;
+                    
+                    showNotification('Camera stopped', 'info');
+                }
+            }
+
+            // Take snapshot
+            function takeSnapshot() {
+                const video = document.getElementById('cameraVideo');
+                if (!video) return;
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                
+                // Create download link
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `snapshot_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showNotification('Snapshot saved', 'success');
+                });
+            }
+
+            // Toggle recording
+            function toggleRecording() {
+                if (!cameraStream) return;
+
+                if (!isRecording) {
+                    // Start recording
+                    recordedChunks = [];
+                    mediaRecorder = new MediaRecorder(cameraStream);
+                    
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) {
+                            recordedChunks.push(event.data);
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `recording_${new Date().toISOString().replace(/[:.]/g, '-')}.webm`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        showNotification('Recording saved', 'success');
+                    };
+                    
+                    mediaRecorder.start();
+                    isRecording = true;
+                    document.getElementById('recordToggle').textContent = '⏹️';
+                    showNotification('Recording started', 'info');
+                    
                 } else {
-                    showNotification('Activate system first', 'warning');
+                    // Stop recording
+                    mediaRecorder.stop();
+                    isRecording = false;
+                    document.getElementById('recordToggle').textContent = '⏺️';
+                    showNotification('Recording stopped', 'info');
+                }
+            }
+
+            // Camera controls event listeners
+            document.getElementById('fullscreenCamera')?.addEventListener('click', () => {
+                if (systemActive && cameraStream) {
+                    const modal = document.getElementById('fullscreenModal');
+                    const fullscreenContainer = modal.querySelector('.fullscreen-camera-placeholder');
+                    
+                    // Clone video element for fullscreen
+                    const video = document.getElementById('cameraVideo');
+                    if (video) {
+                        const fullscreenVideo = video.cloneNode(true);
+                        fullscreenVideo.id = 'fullscreenVideo';
+                        fullscreenVideo.srcObject = cameraStream;
+                        
+                        fullscreenContainer.innerHTML = '';
+                        fullscreenContainer.appendChild(fullscreenVideo);
+                        modal.style.display = 'block';
+                    }
+                } else {
+                    showNotification('Activate system and camera first', 'warning');
                 }
             });
             
             document.getElementById('snapshot')?.addEventListener('click', () => {
-                if (systemActive) {
-                    showNotification('Snapshot saved (simulated)', 'success');
+                if (systemActive && cameraStream) {
+                    takeSnapshot();
                 } else {
-                    showNotification('Activate system first', 'warning');
+                    showNotification('Activate system and camera first', 'warning');
                 }
             });
             
             document.getElementById('recordToggle')?.addEventListener('click', () => {
-                if (systemActive) {
-                    showNotification('Recording toggled (simulated)', 'info');
+                if (systemActive && cameraStream) {
+                    toggleRecording();
                 } else {
-                    showNotification('Activate system first', 'warning');
+                    showNotification('Activate system and camera first', 'warning');
                 }
             });
 
-            // Close modal
-            document.querySelector('.close')?.addEventListener('click', () => {
-                document.getElementById('fullscreenModal').style.display = 'none';
+            document.getElementById('stopCamera')?.addEventListener('click', () => {
+                if (cameraStream) {
+                    stopCamera();
+                } else {
+                    showNotification('Camera is not active', 'warning');
+                }
             });
+
+            // Close modal event listeners
+            document.querySelector('#fullscreenModal .close')?.addEventListener('click', () => {
+                document.getElementById('fullscreenModal').style.display = 'none';
+                // Clean up fullscreen video
+                const fullscreenContainer = document.querySelector('.fullscreen-camera-placeholder');
+                if (fullscreenContainer) {
+                    fullscreenContainer.innerHTML = `
+                        <span>📹</span>
+                        <p>Camera Monitor</p>
+                    `;
+                }
+            });
+
+            // Also close modal when clicking outside of it
+            document.getElementById('fullscreenModal')?.addEventListener('click', (e) => {
+                if (e.target.id === 'fullscreenModal') {
+                    document.getElementById('fullscreenModal').style.display = 'none';
+                    // Clean up fullscreen video
+                    const fullscreenContainer = document.querySelector('.fullscreen-camera-placeholder');
+                    if (fullscreenContainer) {
+                        fullscreenContainer.innerHTML = `
+                            <span>📹</span>
+                            <p>Camera Monitor</p>
+                        `;
+                    }
+                }
+            });
+
+            // Expose functions to global scope for system control
+            window.cameraSystem = {
+                initialize: initializeCamera,
+                stop: stopCamera,
+                isActive: () => !!cameraStream
+            };
         }
 
         function goToPosition(x, y, z) {
@@ -382,12 +668,28 @@
                 return;
             }
             
+            // Update simulation visualization
             if (robotVisualization) {
                 robotVisualization.setRobotPosition(x, y, z);
                 updatePositionDisplay(x, y, z);
                 updateSliders(x, y, z);
                 updateLastCommand(`Go to position: (${x}, ${y}, ${z})`);
-                showNotification(`Moving to position (${x}, ${y}, ${z})`, 'info');
+                
+                // Show different message based on connection status
+                const modeText = isHardwareConnected ? 'hardware + simulation' : 'simulation';
+                showNotification(`Moving to position (${x}, ${y}, ${z}) [${modeText}]`, 'info');
+            }
+            
+            // Send command to hardware if connected
+            if (isHardwareConnected) {
+                sendToHardware('move', { x, y, z })
+                    .then(() => {
+                        console.log('Hardware move command sent successfully');
+                    })
+                    .catch((error) => {
+                        console.error('Hardware move command failed:', error);
+                        showNotification('Hardware command failed: ' + error.message, 'warning');
+                    });
             }
         }
 
@@ -395,24 +697,94 @@
             document.querySelectorAll('.move-btn, .quick-btn, input[type="range"]').forEach(el => {
                 el.disabled = false;
             });
-            document.querySelectorAll('#fullscreenCamera, #snapshot, #recordToggle').forEach(el => {
-                el.disabled = false;
-            });
+            
+            // Initialize camera when system is activated
+            if (window.cameraSystem && !window.cameraSystem.isActive()) {
+                window.cameraSystem.initialize();
+            }
         }
 
         function disableControls() {
             document.querySelectorAll('.move-btn, .quick-btn, input[type="range"]').forEach(el => {
                 el.disabled = true;
             });
-            document.querySelectorAll('#fullscreenCamera, #snapshot, #recordToggle').forEach(el => {
+            document.querySelectorAll('#fullscreenCamera, #snapshot, #recordToggle, #stopCamera').forEach(el => {
                 el.disabled = true;
             });
+            
+            // Stop camera when system is deactivated
+            if (window.cameraSystem && window.cameraSystem.isActive()) {
+                window.cameraSystem.stop();
+            }
+        }
+
+        function setupWebSocketIntegration() {
+            // Setup mode toggle button
+            const modeToggleBtn = document.getElementById('modeToggle');
+            if (modeToggleBtn) {
+                modeToggleBtn.addEventListener('click', () => {
+                    if (isHardwareConnected) {
+                        // Disconnect from hardware
+                        if (window.websocketClient) {
+                            window.websocketClient.disconnect();
+                            showNotification('Disconnected from hardware - entering simulation mode', 'info');
+                        }
+                    } else {
+                        // Try to connect to hardware
+                        if (window.websocketClient) {
+                            window.websocketClient.reconnect();
+                            showNotification('Attempting to connect to hardware...', 'info');
+                        }
+                    }
+                });
+            }
+            
+            // Wait for WebSocket to be available
+            setTimeout(() => {
+                if (window.websocketClient) {
+                    // Completely override WebSocket client's updateConnectionStatus
+                    window.websocketClient.updateConnectionStatus = function() {
+                        // We handle this with our own updateConnectionStatusDisplay function
+                        // Just update our internal state
+                        isHardwareConnected = this.isConnected;
+                        updateConnectionStatusDisplay();
+                    };
+
+                    // Initial status update
+                    updateConnectionStatusDisplay();
+                }
+            }, 100);
+        }
+
+        function updateConnectionStatusDisplay() {
+            const statusDot = document.querySelector('.status-dot');
+            const statusBtn = document.getElementById('modeToggle');
+            
+            if (statusDot && statusBtn) {
+                if (isHardwareConnected) {
+                    statusDot.className = 'status-dot online';
+                    statusBtn.textContent = 'HARDWARE CONNECTED';
+                    statusBtn.title = 'Click to disconnect and use simulation only';
+                } else {
+                    statusDot.className = 'status-dot simulation';
+                    statusBtn.textContent = 'SIMULATION MODE';
+                    statusBtn.title = 'Click to attempt hardware connection';
+                }
+            }
+        }
+
+        function sendToHardware(command, data = {}) {
+            if (isHardwareConnected && window.websocketClient) {
+                return window.websocketClient.sendCommand(command, data);
+            }
+            return Promise.resolve(); // Return resolved promise for simulation mode
         }
 
         function updatePositionDisplay(x, y, z) {
-            document.getElementById('posX').textContent = x.toFixed(2);
-            document.getElementById('posY').textContent = y.toFixed(2);
-            document.getElementById('posZ').textContent = z.toFixed(2);
+            // Update viewport overlay display
+            document.getElementById('overlayPosX').textContent = x.toFixed(2);
+            document.getElementById('overlayPosY').textContent = y.toFixed(2);
+            document.getElementById('overlayPosZ').textContent = z.toFixed(2);
         }
 
         function updateSliders(x, y, z) {

@@ -46,6 +46,27 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.mode-toggle-btn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.mode-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #00d4ff;
+}
+
+.mode-toggle-btn:active {
+    transform: scale(0.98);
+}
+
 .safety-controls {
     display: flex;
     align-items: center;
@@ -173,27 +194,7 @@ body {
     position: relative;
 }
 
-.position-display {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.coord {
-    background: rgba(0, 212, 255, 0.1);
-    padding: 0.8rem;
-    border-radius: 8px;
-    text-align: center;
-    border: 1px solid rgba(0, 212, 255, 0.3);
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-}
-
-.coord span {
-    color: #00ff88;
-    font-size: 1.1rem;
-}
+/* Removed .position-display styles - now using viewport overlay */
 
 /* Movement Controls */
 .movement-controls {
@@ -432,7 +433,7 @@ body {
 /* Notification Styles */
 .notification {
     position: fixed;
-    top: 20px;
+    top: 90px; /* Moved down to avoid header overlap (header ~80px + 10px margin) */
     right: 20px;
     padding: 1rem 1.5rem;
     border-radius: 8px;
@@ -441,6 +442,7 @@ body {
     z-index: 1000;
     transform: translateX(400px);
     transition: transform 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Added shadow for better visibility */
 }
 
 .notification.show {
@@ -549,7 +551,7 @@ body {
     padding: 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    margin-top: 2rem;
+    /* Removed margin-top: 2rem for better alignment */
 }
 
 /* Camera Section */
@@ -559,7 +561,7 @@ body {
     padding: 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    margin-top: 2rem;
+    /* Removed margin-top: 2rem for better alignment with other panels */
 }
 
 /* New Layout Styles for Integrated Interface */
@@ -608,6 +610,56 @@ body {
     border-radius: 8px;
     overflow: hidden;
     margin-bottom: 10px; /* Reduced from 15px */
+    position: relative; /* Required for absolute positioning of overlay */
+}
+
+/* Viewport Coordinate Overlay */
+.viewport-overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    pointer-events: none; /* Allow interaction with 3D scene behind */
+}
+
+.coord-display {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    border-radius: 6px;
+    padding: 8px 12px;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.coord-item {
+    display: flex;
+    align-items: center;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.coord-label {
+    color: #00d4ff;
+    font-weight: bold;
+    width: 16px;
+    margin-right: 4px;
+}
+
+.coord-value {
+    color: #00ff88;
+    font-weight: bold;
+    min-width: 40px;
+    text-align: right;
+    margin-right: 2px;
+}
+
+.coord-unit {
+    color: #ffffff;
+    opacity: 0.8;
+    font-size: 10px;
 }
 
 .view-controls {
@@ -899,35 +951,7 @@ body {
     margin-bottom: 20px;
 }
 
-/* Notification Styles */
-.notification {
-    position: fixed;
-    top: 100px;
-    right: 20px;
-    padding: 10px 20px;
-    border-radius: 5px;
-    color: white;
-    font-weight: bold;
-    z-index: 1001;
-    animation: slideIn 0.3s ease;
-}
-
-.notification-success {
-    background: #28a745;
-}
-
-.notification-error {
-    background: #dc3545;
-}
-
-.notification-warning {
-    background: #ffc107;
-    color: #000;
-}
-
-.notification-info {
-    background: #17a2b8;
-}
+/* Removed duplicate notification styles - using the primary definition above */
 
 @keyframes slideIn {
     from {
@@ -950,4 +974,29 @@ body {
     0% { opacity: 1; }
     50% { opacity: 0.5; }
     100% { opacity: 1; }
+}
+
+/* Camera Video Styles */
+#cameraVideo, #fullscreenVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #000;
+}
+
+#fullscreenVideo {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+}
+
+.camera-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.camera-overlay {
+    pointer-events: none;
 }
