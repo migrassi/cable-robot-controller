@@ -346,7 +346,7 @@ SERIAL_CONFIG = {
 - Desarrollo de nuevas metodologías de control
 - Publicación de resultados reproducibles
 
-## � **Desarrollo Futuro**
+## **Desarrollo Futuro**
 
 ### **Características Planificadas**
 - **Control de trayectorias**: Planificación y ejecución de paths complejos
@@ -360,7 +360,7 @@ SERIAL_CONFIG = {
 - **Protocolos avanzados**: Comunicación más robusta
 - **Interface móvil**: App nativa para dispositivos móviles
 
-## 🤝 **Contribución**
+## Contribución
 
 El proyecto es open-source y acepta contribuciones de la comunidad:
 
@@ -378,19 +378,18 @@ git commit -am "Añadir nueva característica"
 git push origin nueva-caracteristica
 ```
 
-## 📞 **Soporte y Comunidad**
+## Soporte y Comunidad
 
 - **Issues**: Reportar bugs y solicitar features en GitHub
 - **Discusiones**: Foro de la comunidad para preguntas
 - **Wiki**: Documentación extendida y tutoriales
 - **Ejemplos**: Repositorio de configuraciones y casos de uso
 
-## 📄 **Licencia**
+## Licencia
 
 Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
 
 ---
 
-**Desarrollado con ❤️ para la comunidad de robótica**
-
-*Cable Robot Controller - Donde la simulación encuentra la realidad* 
+**Desarrollado con dedicación para la comunidad de Artes Electrónicas**
+ 
