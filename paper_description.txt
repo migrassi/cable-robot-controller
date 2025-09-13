@@ -1,0 +1,25 @@
+Cable Robot Controller: Sistema de Control y Simulación para Robots Suspendidos por Cables
+
+Abstract
+--------
+Se presenta el desarrollo de un sistema integral para el control y simulación de robots paralelos suspendidos por cables. El sistema, denominado Cable Robot Controller, integra una interfaz web para visualización 3D en tiempo real, un servidor de comunicación basado en WebSocket y módulos de control para hardware físico. Se describen la arquitectura, los protocolos de comunicación, la compatibilidad con diferentes plataformas de hardware y las capacidades de simulación y operación remota. El objetivo es proporcionar una herramienta flexible y robusta para investigación, desarrollo y aplicaciones educativas en robótica por cables.
+
+1. Introducción
+---------------
+Los robots paralelos suspendidos por cables constituyen una alternativa versátil para aplicaciones que requieren grandes volúmenes de trabajo y alta relación entre carga útil y masa móvil. Sin embargo, su control y simulación presentan desafíos particulares debido a la redundancia, la flexibilidad de los cables y la necesidad de sistemas de seguridad avanzados. Este trabajo describe el diseño y la implementación de un sistema de control y simulación que permite operar tanto en modo virtual como con hardware real, facilitando la experimentación y el desarrollo de nuevas estrategias de control.
+
+2. Descripción del Sistema
+--------------------------
+El sistema se compone de tres módulos principales: (a) una interfaz web desarrollada con tecnologías HTML5, CSS3 y JavaScript, que implementa la visualización 3D mediante Three.js y permite la interacción directa con el modelo del robot; (b) un servidor de comunicación implementado en Python, que utiliza el protocolo WebSocket para la transmisión de comandos y estados entre la interfaz y el hardware; y (c) módulos de firmware para microcontroladores (Arduino, ESP32) y plataformas embebidas (Raspberry Pi), responsables de la ejecución de los comandos de control y la gestión de la seguridad física.
+
+La arquitectura del sistema permite la operación en dos modos: simulación pura, donde todos los cálculos y visualizaciones se realizan en el navegador, y control de hardware, donde los comandos se transmiten al sistema físico y se recibe retroalimentación en tiempo real. El protocolo de comunicación es extensible y soporta múltiples tipos de hardware mediante configuraciones específicas.
+
+El sistema implementa mecanismos de seguridad a nivel de software y hardware, incluyendo parada de emergencia, validación de límites de workspace y monitoreo de estados. La visualización 3D permite la supervisión del estado del robot y la planificación de trayectorias en tiempo real. El diseño modular facilita la integración de nuevos algoritmos de control y la adaptación a diferentes configuraciones mecánicas.
+
+3. Resultados y Aplicaciones
+---------------------------
+El sistema ha sido validado en configuraciones experimentales con robots de tres grados de libertad, utilizando motores paso a paso y controladores estándar. Se ha verificado la capacidad de operación remota, la robustez ante fallos de comunicación y la precisión en la ejecución de trayectorias. El entorno de simulación permite la evaluación de estrategias de control antes de su implementación en hardware, reduciendo riesgos y tiempos de desarrollo.
+
+4. Conclusiones
+---------------
+Cable Robot Controller constituye una herramienta flexible y extensible para el desarrollo y la experimentación en robótica por cables. Su arquitectura modular y su compatibilidad con hardware abierto lo hacen adecuado para aplicaciones de investigación, docencia y prototipado rápido. El sistema está disponible como software libre y puede ser adaptado a diferentes requerimientos experimentales.
